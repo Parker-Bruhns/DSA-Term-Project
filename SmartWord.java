@@ -22,7 +22,6 @@ public class SmartWord {
    // initialize SmartWord with a file of English words
    public SmartWord(String wordFile) throws FileNotFoundException {
       this.path = new FileReader(wordFile);
-
    }
 
    // process old messages from oldMessageFile
@@ -36,7 +35,6 @@ public class SmartWord {
    // letterPosition:  position of the letter in the word, starts from 0
    // wordPosition: position of the word in a message, starts from 0
    public String[] guess(char letter,  int letterPosition, int wordPosition) {
-      // TODO: 
 
       return guesses;
    }
