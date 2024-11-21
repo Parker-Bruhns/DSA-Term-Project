@@ -2,7 +2,7 @@
 
    Authors (group members): Jack Fishbein, Nick Speranza, and Parker Bruhns
    Email addresses of group members: nrinconspera2022@my.fit.edu
-   Group name:
+   Group name: 12Three
 
 Course: Algorithms and Data Structures (CSE 2010)
 Section: 1
