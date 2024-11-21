@@ -20,7 +20,7 @@ public class Trie {
    }
 
    public class Suffix {
-
+      private String data;
    }
 
    // Trie class
@@ -30,6 +30,12 @@ public class Trie {
       this.root = new Node();
 
    }
+
+   // Mutator methods for Trie class
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // End of Mutator methods for Trie class
 
    
 }
