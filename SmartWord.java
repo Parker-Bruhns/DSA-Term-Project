@@ -14,17 +14,56 @@ Description of the overall algorithm:
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 public class SmartWord {
    String[] guesses = new String[3];  // 3 guesses from SmartWord
    FileReader path;
+   Trie trie;
 
    // initialize SmartWord with a file of English words
    public SmartWord(String wordFile) throws FileNotFoundException {
       this.path = new FileReader(wordFile);
-
+      this.trie = new Trie();
+      loadWordsIntoTrie(wordFile); 
    }
 
+   private void loadWordsIntoTrie(String wordFile) throws FileNotFoundException {
+      try (BufferedReader br = new BufferedReader(new FileReader(wordFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Remove any surrounding whitespace and convert to lowercase
+                String word = line.trim().toLowerCase();
+                if (!word.isEmpty()) {
+                    trie.insert(word);  // Insert each word into the Trie
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+   }
+
+   public void printAllWords() {
+      trie.printAllWords(); 
+   }
+
+   public static void main(String[] args) throws FileNotFoundException {
+        if (args.length < 1) {
+            System.out.println("Usage: java SmartWord <wordFile>");
+            return;
+        }
+
+        String wordFile = args[0]; 
+        SmartWord smartWord = new SmartWord(wordFile);
+
+        smartWord.printAllWords();
+    }
+
+
+// THINGS TO DO UNDER THIS
+/*
+   
    // process old messages from oldMessageFile
    public void processOldMessages(String oldMessageFile) {
       // TODO: create trie & weight edges
@@ -57,5 +96,7 @@ public class SmartWord {
    public void feedback(boolean isCorrectGuess, String correctWord) {
 
    }
+*/
 
+   
 }
