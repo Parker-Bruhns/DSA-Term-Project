@@ -1,12 +1,13 @@
 # DSA-Term-Project
+A project for CSE 2010 Algorithms and Data Structures
 
-Needs done:
-
-Completed:
--[] Trie.java
+## Tasks:
+-[ ] Trie.java
     -[✓] Insert method
     -[✓] contains method
-    -[✓]
+-[ ] SmartWord.java
+    -[ ] Process Old Messages Function
+        -[ ] Add weights to Trie- For more efficient version
 
 Extra Info:
     - Copied most of Trie.java from this video:

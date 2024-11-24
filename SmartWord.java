@@ -20,12 +20,15 @@ import java.io.IOException;
 public class SmartWord {
    String[] guesses = new String[3];  // 3 guesses from SmartWord
    FileReader path;
+
    Trie trie;
+   String currentWord;
 
    // initialize SmartWord with a file of English words
    public SmartWord(String wordFile) throws FileNotFoundException {
       this.path = new FileReader(wordFile);
       this.trie = new Trie();
+      this.currentWord = "";
       loadWordsIntoTrie(wordFile); 
    }
 
@@ -54,10 +57,11 @@ public class SmartWord {
             return;
         }
 
-        String wordFile = args[0]; 
-        SmartWord smartWord = new SmartWord(wordFile);
+        SmartWord smartWord = new SmartWord(args[0]);
 
-        smartWord.printAllWords();
+        smartWord.guess('a', 0, 0);
+        smartWord.guess('b', 1, 0);
+
     }
 
 
@@ -74,6 +78,8 @@ public class SmartWord {
    // letterPosition:  position of the letter in the word, starts from 0
    // wordPosition: position of the word in a message, starts from 0
    public String[] guess(char letter,  int letterPosition, int wordPosition) {
+      currentWord = currentWord + letter;
+      System.out.println(currentWord);
       // TODO
 
       return guesses;
@@ -93,6 +99,9 @@ public class SmartWord {
    // b.         false               null
    // c.         false               correct word
    public void feedback(boolean isCorrectGuess, String correctWord) {
+      if (isCorrectGuess) {
+         currentWord = "";
+      }
 
    }
 }
