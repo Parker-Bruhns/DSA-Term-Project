@@ -63,6 +63,7 @@ public class Trie {
    // Mutator methods for Trie class
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    public void insert(String word) {
+      word = word.toLowerCase();
       Node current = this.root;
       int i = 0;
 
@@ -112,17 +113,6 @@ public class Trie {
       }
       return false;
    }
-
-
-   // public void insert(String word) {
-   //    Node current = root;
-   //
-   //    for (char c : word.toCharArray()) {
-   //       current = current.children.computeIfAbsent(c, k -> new Node(c));
-   //    }
-   //    current.last = new Suffix(word);
-   // }
-
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // End of Mutator methods for Trie class
 
@@ -142,24 +132,6 @@ public class Trie {
       }
    }
 
-   // // Nick Work
-   //
-   // private void printAllWordsRecursive(Node node, StringBuilder prefix, int level) {
-   //    if (node.data != ' ') {
-   //       System.out.println(" ".repeat(level) + "|-- " + node.data);
-   //    }
-   //
-   //    if (node.last != null) {
-   //       System.out.println(prefix.toString() + node.last.data);
-   //       System.out.println(" ".repeat(level + 1) + "(word: " + node.last.data + ")");
-   //    }
-   //
-   //    for (Map.Entry<Character, Node> entry : node.children.entrySet()) {
-   //       prefix.append(entry.getKey());
-   //       printAllWordsRecursive(entry.getValue(), prefix, level + 1);
-   //       // prefix.deleteCharAt(prefix.length() - 1);
-   //    }
-   // }
    public void loadWordsFromFile(String fileName) throws FileNotFoundException, IOException {
       BufferedReader reader = new BufferedReader(new FileReader(fileName));
       String line;
@@ -171,6 +143,24 @@ public class Trie {
 
    public void printAllWords() {
       printAllWordsRecursive(root, new StringBuilder());
+   }
+
+   public void display() {
+      displayRecursive(root, "", 0);
+   }
+
+   private void displayRecursive(Node node, String prefix, int level) {
+      if (node.prefix != null) {
+         // Print the current node's prefix
+         System.out.println(" ".repeat(level * 2) + "|-- \"" + node.prefix + "\"" + (node.isEnd ? " (word)" : ""));
+      }
+
+      // Recursively display all children
+      for (Node child : node.children) {
+         if (child != null) {
+            displayRecursive(child, prefix + (node.prefix == null ? "" : node.prefix), level + 1);
+         }
+      }
    }
 
    // @Override

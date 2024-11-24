@@ -29,8 +29,8 @@ public class SmartWord {
       loadWordsIntoTrie(wordFile); 
    }
 
-   private void loadWordsIntoTrie(String wordFile) throws FileNotFoundException {
-      try (BufferedReader br = new BufferedReader(new FileReader(wordFile))) {
+   private void loadWordsIntoTrie(String wordFile) {
+      try (BufferedReader br = new BufferedReader(path)) {
             String line;
             while ((line = br.readLine()) != null) {
                 // Remove any surrounding whitespace and convert to lowercase
@@ -49,7 +49,7 @@ public class SmartWord {
    }
 
    public static void main(String[] args) throws FileNotFoundException {
-        if (args.length < 1) {
+        if (args.length != 1) {
             System.out.println("Usage: java SmartWord <wordFile>");
             return;
         }
@@ -62,7 +62,6 @@ public class SmartWord {
 
 
 // THINGS TO DO UNDER THIS
-/*
    
    // process old messages from oldMessageFile
    public void processOldMessages(String oldMessageFile) {
@@ -75,7 +74,7 @@ public class SmartWord {
    // letterPosition:  position of the letter in the word, starts from 0
    // wordPosition: position of the word in a message, starts from 0
    public String[] guess(char letter,  int letterPosition, int wordPosition) {
-      // TODO: 
+      // TODO
 
       return guesses;
    }
@@ -96,7 +95,4 @@ public class SmartWord {
    public void feedback(boolean isCorrectGuess, String correctWord) {
 
    }
-*/
-
-   
 }
