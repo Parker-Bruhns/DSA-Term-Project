@@ -44,6 +44,8 @@ public class Trie {
       this.root = new Node(' ');
    }
 
+   // Mutator methods for Trie class
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    public void insert(String word) {
       Node current = root;
 
@@ -52,8 +54,11 @@ public class Trie {
       }
       current.last = new Suffix(word);
    }
+   
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // End of Mutator methods for Trie class
 
-  public void loadWordsFromFile(String fileName) {
+   public void loadWordsFromFile(String fileName) {
       try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
          String line;
          while ((line = reader.readLine()) != null) {
@@ -79,12 +84,6 @@ public class Trie {
          prefix.deleteCharAt(prefix.length() - 1);
       }
    }
-   
-   // Mutator methods for Trie class
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   // End of Mutator methods for Trie class
 
    
 }
