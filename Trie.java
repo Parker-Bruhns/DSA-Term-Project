@@ -2,7 +2,9 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Trie {
    // Node Inner class to support Trie class
@@ -91,6 +93,8 @@ public class Trie {
          }
       }
    }
+   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   // End of Mutator methods for Trie class
 
    public boolean contains(String word) {
       Node current = root;
@@ -113,8 +117,50 @@ public class Trie {
       }
       return false;
    }
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   // End of Mutator methods for Trie class
+
+   // Edit to return String array
+   public String[] traverse(String prefix) {
+      prefix = prefix.toLowerCase();
+      Node current = root;
+      int i = 0;
+
+      // Traverse the trie to find the node corresponding to the prefix
+      while (i < prefix.length()) {
+         int key = Node.getIndex(prefix.charAt(i));
+         if (!current.hasChild(key)) {
+            return new String[0]; // Return an empty array if the prefix does not exist
+         }
+
+         current = current.children[key];
+         int prefixLen = commonPrefixLen(prefix.substring(i), current.prefix);
+         if (prefixLen != current.prefix.length()) {
+            return new String[0]; // Prefix does not match fully
+         }
+         i += prefixLen;
+      }
+
+      // Collect all words starting from the current node
+      return collectWords(current, new StringBuilder(prefix)).toArray(new String[0]);
+   }
+
+   private List<String> collectWords(Node node, StringBuilder prefix) {
+      List<String> words = new ArrayList<>();
+
+      // If the current node is the end of a word, add it
+      if (node.isEnd) {
+         words.add(prefix.toString());
+      }
+
+      // Recursively collect words from children
+      for (Node child : node.children) {
+         if (child != null) {
+            collectWords(child, new StringBuilder(prefix).append(child.prefix)).forEach(words::add);
+            prefix.setLength(prefix.length() - child.prefix.length()); // Backtrack
+         }
+      }
+
+      return words;
+   }
 
    private void printAllWordsRecursive(Node node, StringBuilder prefix) {
       if (node.isEnd) {
