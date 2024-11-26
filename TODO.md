@@ -5,6 +5,7 @@ A project for CSE 2010 Algorithms and Data Structures
 -[ ] Trie.java
     -[✓] Insert method
     -[✓] contains method
+    -[✓] Traverse method
 -[ ] SmartWord.java
     -[ ] Process Old Messages Function
         -[ ] Add weights to Trie- For more efficient version

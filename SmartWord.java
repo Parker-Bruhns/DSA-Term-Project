@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class SmartWord {
    String[] guesses = new String[3];  // 3 guesses from SmartWord
@@ -42,13 +44,10 @@ public class SmartWord {
                     trie.insert(word);  // Insert each word into the Trie
                 }
             }
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-   }
-
-   public void printAllWords() {
-      trie.printAllWords(); 
    }
 
    public static void main(String[] args) throws FileNotFoundException {
@@ -81,11 +80,11 @@ public class SmartWord {
       currentWord = currentWord + letter;
       System.out.println(currentWord);
       // TODO
-      List<String> suggestions = trie.getWordsWithPrefix(currentWord);
+      String[] suggestions = trie.traverse(currentWord);
       for (int i = 0; i < guesses.length; i++) {
-         guesses[i] = i < suggestions.size() ? suggestions.get(i) : null;
+         guesses[i] = i < suggestions.length ? suggestions[i] : null;
       }
-      system.out.println("guesses: " + Arrays.toString(guesses));
+      System.out.println("guesses: " + Arrays.toString(guesses));
       return guesses;
    }
 
