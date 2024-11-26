@@ -81,7 +81,11 @@ public class SmartWord {
       currentWord = currentWord + letter;
       System.out.println(currentWord);
       // TODO
-
+      List<String> suggestions = trie.getWordsWithPrefix(currentWord);
+      for (int i = 0; i < guesses.length; i++) {
+         guesses[i] = i < suggestions.size() ? suggestions.get(i) : null;
+      }
+      system.out.println("guesses: " + Arrays.toString(guesses));
       return guesses;
    }
 
@@ -101,7 +105,11 @@ public class SmartWord {
    public void feedback(boolean isCorrectGuess, String correctWord) {
       if (isCorrectGuess) {
          currentWord = "";
+      } else if (correctWord != null) {
+         //Add correct word to the trie to improve
+         trie.insert(correctWord);
+         //Reset current word to blank
+         currentWord = ""; 
       }
-
    }
 }
