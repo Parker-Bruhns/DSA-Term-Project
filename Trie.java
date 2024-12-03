@@ -118,31 +118,6 @@ public class Trie {
       return false;
    }
 
-   // Edit to return String array
-   // public String[] traverse(String prefix) {
-   //    prefix = prefix.toLowerCase();
-   //    Node current = root;
-   //    int i = 0;
-   //
-   //    // Traverse the trie to find the node corresponding to the prefix
-   //    while (i < prefix.length()) {
-   //       int key = Node.getIndex(prefix.charAt(i));
-   //       if (!current.hasChild(key)) {
-   //          return new String[0]; // Return an empty array if the prefix does not exist
-   //       }
-   //
-   //       current = current.children[key];
-   //       int prefixLen = commonPrefixLen(prefix.substring(i), current.prefix);
-   //       if (prefixLen != current.prefix.length()) {
-   //          return new String[0]; // Prefix does not match fully
-   //       }
-   //       i += prefixLen;
-   //    }
-   //
-   //    // Collect all words starting from the current node
-   //    return collectWords(current, new StringBuilder(prefix)).toArray(new String[0]);
-   // }
-
    public String[] traverse(String prefix) {
       prefix = prefix.toLowerCase();
       Node current = root;
@@ -159,6 +134,9 @@ public class Trie {
       }
 
       List<String> words = collectWords(current, new StringBuilder());
+      for (int j = 0; j < words.size(); j++) {
+         words.set(j, prefix + words.get(j));
+      }
       return words.toArray(new String[words.size()]);
    }
 
