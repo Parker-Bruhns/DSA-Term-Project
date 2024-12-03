@@ -20,22 +20,38 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SmartWord {
+   public static void main(String[] args) throws Exception {
+      if (args.length != 2) {
+         System.out.println("Usage: java SmartWord <wordFile> <oldWords>");
+         return;
+      }
+
+      SmartWord smartWord = new SmartWord(args[0]);
+
+      smartWord.guess('a', 0, 0);
+      smartWord.guess('b', 1, 0);
+      smartWord.guess('o', 2, 0);
+      smartWord.guess('u', 3, 0);
+      smartWord.guess('t', 3, 0);
+   }
+
    String[] guesses = new String[3];  // 3 guesses from SmartWord
-   FileReader path;
+   FileReader dictionaryPath;
 
    Trie trie;
+   OldWords oldWords;
    String currentWord;
 
    // initialize SmartWord with a file of English words
-   public SmartWord(String wordFile) throws FileNotFoundException {
-      this.path = new FileReader(wordFile);
+   public SmartWord(String wordFile) throws IOException {
+      this.dictionaryPath = new FileReader(wordFile);
       this.trie = new Trie();
       this.currentWord = "";
       loadWordsIntoTrie(wordFile); 
    }
 
    private void loadWordsIntoTrie(String wordFile) {
-      try (BufferedReader br = new BufferedReader(path)) {
+      try (BufferedReader br = new BufferedReader(dictionaryPath)) {
             String line;
             while ((line = br.readLine()) != null) {
                 // Remove any surrounding whitespace and convert to lowercase
@@ -50,26 +66,16 @@ public class SmartWord {
         }
    }
 
-   public static void main(String[] args) throws FileNotFoundException {
-        if (args.length != 1) {
-            System.out.println("Usage: java SmartWord <wordFile>");
-            return;
-        }
 
-        SmartWord smartWord = new SmartWord(args[0]);
-
-        smartWord.guess('a', 0, 0);
-        smartWord.guess('b', 1, 0);
-
-    }
-
-
-// THINGS TO DO UNDER THIS
-   
    // process old messages from oldMessageFile
-   public void processOldMessages(String oldMessageFile) {
-      // TODO: create trie & weight edges
-
+   public void processOldMessages(String oldMessageFile) throws IOException {
+      BufferedReader br = new BufferedReader(new FileReader(oldMessageFile));
+      String line;
+      while ((line = br.readLine()) != null) {
+         // Removes everything that is not a letter
+         line = line.replaceAll("[^a-zA-Z]", "");
+      }
+      br.close();
    }
 
    // based on a letter typed in by the user, return 3 word guesses in an array
@@ -79,6 +85,7 @@ public class SmartWord {
    public String[] guess(char letter,  int letterPosition, int wordPosition) {
       currentWord = currentWord + letter;
       System.out.println(currentWord);
+
       // TODO
       String[] suggestions = trie.traverse(currentWord);
       for (int i = 0; i < guesses.length; i++) {
