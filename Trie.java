@@ -1,219 +1,178 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-public class Trie {
-   // Node Inner class to support Trie class
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   public class Node {
-      private Node[] children = new Node[26];
-      private String prefix;
-      private boolean isEnd;
+// Trie structure for storing words and retrieving suggestions
+class Trie {
+    // Inner Classes of Trie
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // TrieNode inner class to hold the data for each node
+    private static class TrieNode {
+       Map<Character, TrieNode> children = new TreeMap<>(); // Stores child nodes
+       boolean isWord = false; // Indicates if the node represents a complete word
+       int frequency = 0; // Tracks how often the word appears
+       int confirmed = 0; // Tracks how often the word is confirmed by feedback
+    }
 
+    // WordScore inner class to hold the weights of each word
+    private static class WordScore {
+       String word;
+       double weight;
 
-      public Node(String prefix) {
-         this.isEnd = false;
-         this.prefix = prefix;
-      }
+       WordScore(String word, double weight) {
+          this.word = word;
+          this.weight = weight;
+       }
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // End of Inner Classes
 
-      private void insertChild(Node newNode) {
-         children[Node.getIndex(newNode.prefix)] = newNode;
-      }
+    // Trie class
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private final TrieNode root;
+    private final Map<String, List<String>> suggestionCache; // Cache for frequently requested prefixes
 
+    // Trie class default constructor
+    public Trie() {
+       this.root = new TrieNode();
+       this.suggestionCache = new HashMap<>();
+    }
 
-      // You can index an array with characters 
-      //    b/c 'a'-'a' = 0, 'b'-'a' = 1, and 'c' - 'a' = 2 etc...
-      private static int getIndex(char c) {
-         return c - 'a';
-      }
+    // Manipulation methods
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    // Inserts a word into the Trie
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char c : word.toCharArray()) {
+            node.children.putIfAbsent(c, new TrieNode());
+            node = node.children.get(c);
+        }
+        node.isWord = true;
+        node.frequency++;
+    }
 
-      private static int getIndex(String s) {
-         char start = s.charAt(0);
-         return start - 'a';
-      }
-
-      private boolean hasChild(int index) {
-         return children[index] != null;
-      }
-   }
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   // End of Node class
-
-   // Trie class
-   private Node root;
-
-   public Trie () {
-      this.root = new Node(null);
-   }
-
-   // Helper method for Trie class
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   public static int commonPrefixLen(String a, String b) {
-      int len = 0;
-      while (len < a.length() && len < b.length() && a.charAt(len) == b.charAt(len)) {
-         len++;
-      }
-      return len;
-   }
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   // End of Helper Methods
-
-   // Mutator methods for Trie class
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   public void insert(String word) {
-      word = word.toLowerCase();
-      Node current = this.root;
-      int i = 0;
-
-      while (i < word.length()) {
-         int key = word.charAt(i) - 'a';
-         boolean childExists = current.hasChild(key);
-         if (!childExists) {
-            Node newNode = new Node(word.substring(i));
-            newNode.isEnd = true;
-            current.insertChild(newNode);
-            return;
-         }
-
-         current = current.children[key];
-         int prefixLen = commonPrefixLen(word.substring(i), current.prefix);
-         i += prefixLen;
-         if (prefixLen < current.prefix.length()) {
-            Node newChild = new Node(current.prefix.substring(prefixLen));
-            newChild.isEnd = current.isEnd;
-            newChild.children = current.children;
-            current.prefix = current.prefix.substring(0, prefixLen);
-            current.children = new Node[26];
-            current.insertChild(newChild);
-            current.isEnd = i == word.length();
-         }
-      }
-   }
-   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   // End of Mutator methods for Trie class
-
-   public boolean contains(String word) {
-      Node current = root;
-      int i = 0;
-      while (i < word.length()) {
-         int key = Node.getIndex(word);
-         if (!current.hasChild(key)) {
-            return false;
-         }
-
-         current = current.children[key];
-         int prefixLen = commonPrefixLen(word.substring(i), current.prefix);
-         if (prefixLen != current.prefix.length()) {
-            return false;
-         }
-         i += prefixLen;
-         if (i == word.length()) {
-            return current.isEnd;
-         }
-      }
-      return false;
-   }
-
-   public String[] traverse(String prefix) {
-      prefix = prefix.toLowerCase();
-      Node current = root;
-      int i = 0;
-
-      while (i < prefix.length()) {
-         int key = Node.getIndex(prefix.charAt(i));
-         if (!current.hasChild(key)) {
-            return new String[0]; // Return empty array if prefix doesn't exist
-         }
-
-         current = current.children[key];
-         i++;
-      }
-
-      List<String> words = collectWords(current, new StringBuilder());
-      for (int j = 0; j < words.size(); j++) {
-         words.set(j, prefix + words.get(j));
-      }
-      return words.toArray(new String[words.size()]);
-   }
-
-   private List<String> collectWords(Node node, StringBuilder prefix) {
-      List<String> words = new ArrayList<>();
-
-      if (node.isEnd) {
-         words.add(prefix.toString());
-      }
-
-      for (Node child : node.children) {
-         if (child != null) {
-            // Create a new StringBuilder with the current prefix
-            StringBuilder childPrefix = new StringBuilder();
-            if (node.prefix == null) {
-               childPrefix.append(child.prefix);
-            } else {
-               childPrefix.append(node.prefix).append(child.prefix);
+    // Confirms a word for reuse in later guesses
+    public void confirmWord(String word) {
+        TrieNode node = root;
+        for (char c : word.toCharArray()) {
+            if (!node.children.containsKey(c)) {
+                return; // Word does not exist
             }
+            node = node.children.get(c);
+        }
+        node.confirmed++;
+    }
 
-            // Recursively collect words from the child node
-            collectWords(child, childPrefix).forEach(words::add);
-         }
-      }
+    // Prunes low-frequency and unconfirmed nodes
+    public void pruneUnused() {
+        prune(root, new StringBuilder());
+    }
 
-      return words;
-   }
+    // Prunes low-frequency and unconfirmed nodes
+    private boolean prune(TrieNode node, StringBuilder prefix) {
+        Iterator<Map.Entry<Character, TrieNode>> it = node.children.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Character, TrieNode> entry = it.next();
+            TrieNode child = entry.getValue();
+            prefix.append(entry.getKey());
+            if (prune(child, prefix)) {
+                it.remove(); // Remove unused child
+            }
+            prefix.deleteCharAt(prefix.length() - 1);
+        }
+        return !node.isWord && node.frequency <= 5 && node.confirmed == 0 && node.children.isEmpty();
+    }
 
-   // private List<String> collectWords(Node node, StringBuilder prefix) {
-   //    List<String> words = new ArrayList<>();
-   //
-   //    // If the current node is the end of a word, add it
-   //    if (node.isEnd) {
-   //       words.add(prefix.toString());
-   //    }
-   //
-   //    // Recursively collect words from children
-   //    for (Node child : node.children) {
-   //       if (child != null) {
-   //          collectWords(child, new StringBuilder(prefix).append(child.prefix)).forEach(words::add);
-   //          // prefix.setLength(prefix.length() - child.prefix.length()); // Backtrack
-   //       }
-   //    }
-   //
-   //    return words;
-   // }
+    // Compresses the Trie for efficient storage
+    public void compressTrie() {
+        compress(root);
+    }
 
-   public void loadWordsFromFile(String fileName) throws FileNotFoundException, IOException {
-      BufferedReader reader = new BufferedReader(new FileReader(fileName));
-      String line;
-      while ((line = reader.readLine()) != null) {
-         this.insert(line.replaceAll("\\s+", "").toLowerCase()); 
-      }
-      reader.close();
-   }
+    private void compress(TrieNode node) {
+        for (Map.Entry<Character, TrieNode> entry : node.children.entrySet()) {
+            TrieNode child = entry.getValue();
+            compress(child);
 
-   public void display() {
-      displayRecursive(root, "", 0);
-   }
+            // Merge single-child nodes
+            if (child.children.size() == 1 && !child.isWord) {
+                Map.Entry<Character, TrieNode> grandchild = child.children.entrySet().iterator().next();
+                node.children.put(grandchild.getKey(), grandchild.getValue());
+                node.children.remove(entry.getKey());
+            }
+        }
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // End of manipultation methods
 
-   private void displayRecursive(Node node, String prefix, int level) {
-      if (node.prefix != null) {
-         // Print the current node's prefix
-         System.out.println(" ".repeat(level * 2) + "|-- \"" + node.prefix + "\"" + (node.isEnd ? " (word)" : ""));
-      }
+    // Popularity methods
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Retrieves suggestions based on prefix and weighted scoring
+    public List<String> getWeightedSuggestions(String prefix, int limit, String currentWord,
+                                               Map<String, Map<String, Integer>> bigramModel,
+                                               Map<String, Map<String, Integer>> trigramModel) {
+        if (suggestionCache.containsKey(prefix)) {
+            return suggestionCache.get(prefix); // Return cached suggestions if available
+        }
 
-      // Recursively display all children
-      for (Node child : node.children) {
-         if (child != null) {
-            displayRecursive(child, prefix + (node.prefix == null ? "" : node.prefix), level + 1);
-         }
-      }
-   }
+        TrieNode node = root;
+        for (char c : prefix.toCharArray()) {
+            if (!node.children.containsKey(c)) {
+                return Collections.emptyList(); // No suggestions available
+            }
+            node = node.children.get(c);
+        }
 
-   // @Override
-   // public String toString() {
-   //    Node current = this.root;
-   //    return null;
-   // }
+        // Calculate scores for suggestions
+        List<WordScore> wordScores = new ArrayList<>();
+        findWeightedWords(node, new StringBuilder(prefix), wordScores, currentWord, bigramModel, trigramModel);
+
+        // Sort by weight in descending order
+        wordScores.sort((a, b) -> Double.compare(b.weight, a.weight));
+
+        // Prepare the result list
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < Math.min(limit, wordScores.size()); i++) {
+            result.add(wordScores.get(i).word);
+        }
+
+        suggestionCache.put(prefix, result); // Cache the result for future use
+        return result;
+    }
+
+    // Searches the tree for weighted words
+    private void findWeightedWords(TrieNode node, StringBuilder prefix, List<WordScore> wordScores,
+                                   String currentWord, Map<String, Map<String, Integer>> bigramModel,
+                                   Map<String, Map<String, Integer>> trigramModel) {
+        if (node.isWord) {
+            // Calculate bigram and trigram probabilities
+            double bigramProbability = bigramModel.getOrDefault(currentWord, Collections.emptyMap())
+                                                  .getOrDefault(prefix.toString(), 0);
+            String[] words = currentWord.split("\\s+");
+            String trigramKey = words.length > 1 ? words[words.length - 2] + " " + words[words.length - 1] : null;
+            double trigramProbability = trigramKey != null ? trigramModel.getOrDefault(trigramKey, Collections.emptyMap())
+                                                           .getOrDefault(prefix.toString(), 0) : 0;
+
+            // Calculate weight
+            double weight = (node.frequency * 0.25) 
+                          + (node.confirmed * 2.0) 
+                          + (bigramProbability * 1.5) 
+                          + (trigramProbability * 2.0);
+
+            wordScores.add(new WordScore(prefix.toString(), weight));
+        }
+        for (Map.Entry<Character, TrieNode> entry : node.children.entrySet()) {
+            prefix.append(entry.getKey());
+            findWeightedWords(entry.getValue(), prefix, wordScores, currentWord, bigramModel, trigramModel);
+            prefix.deleteCharAt(prefix.length() - 1);
+        }
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // End of Popularity methods
 }
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// End of Trie Class
