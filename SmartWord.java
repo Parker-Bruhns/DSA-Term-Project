@@ -26,7 +26,7 @@ public class SmartWord {
          return;
       }
 
-      SmartWord smartWord = new SmartWord(args[0]);
+      SmartWord2 smartWord = new SmartWord2(args[0]);
 
       smartWord.guess('a', 0, 0);
       smartWord.guess('b', 1, 0);

@@ -70,7 +70,7 @@ public class EvalSmartWord
         //Preprocessing in SmartWord
 	System.out.println("Preprocessing in SmartWord...");
         long startPreProcTime = bean.getCurrentThreadCpuTime();
-        SmartWord sw = new SmartWord(args[0]);
+        SmartWord2 sw = new SmartWord2(args[0]);
         sw.processOldMessages(args[1]);
         long endPreProcTime = bean.getCurrentThreadCpuTime();
 
@@ -190,7 +190,7 @@ public class EvalSmartWord
         //OverAll Score
         System.out.printf("Overall Score: %.4f\n",accuracy*accuracy/Math.sqrt(avgTime * memory));
 
-	SmartWord sw2 = sw;  // keep sw used to avoid garbage collection of sw
+	SmartWord2 sw2 = sw;  // keep sw used to avoid garbage collection of sw
     }
 
 
