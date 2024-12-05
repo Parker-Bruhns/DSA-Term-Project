@@ -1,121 +1,129 @@
 /*
-
    Authors (group members): Jack Fishbein, Nick Speranza, and Parker Bruhns
    Email addresses of group members: nrinconspera2022@my.fit.edu, pbruhns2023@my.fit.edu, jfishbein2022@my.fit.edu
    Group name: 12Three
 
-Course: Algorithms and Data Structures (CSE 2010)
-Section: 1
+   Course: Algorithms and Data Structures (CSE 2010)
+   Section: 1
 
-Description of the overall algorithm:
-
-
+   Description of the overall algorithm: The SmartWord program predicts and suggests word completions by using a Trie
+   to store words and quickly find matches based on prefixes. It also uses context from past messages with bigram and trigram
+   models to prioritize suggestions that fit well with recent words. When users type, it suggests up to three words ranked by
+   how often they appear and how relevant they are to the current context. It learns from feedback by confirming correct words
+   or adding new ones to improve future predictions. The program is optimized to balance accuracy, speed, and memory efficiency.
 */
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Arrays;
+
+
 
 public class SmartWord {
-   public static void main(String[] args) throws Exception {
-      if (args.length != 2) {
-         System.out.println("Usage: java SmartWord <wordFile> <oldWords>");
-         return;
-      }
+    private final Trie trie;
+    private final Map<String, Map<String, Integer>> bigramModel; // Tracks word pairs and their frequencies
+    private final Map<String, Map<String, Integer>> trigramModel; // Tracks word triplets and their frequencies
+    private String currentWord; // Tracks the current word being guessed
+    private static final int MAX_GUESSES = 3; // Maximum number of suggestions
 
-      SmartWord smartWord = new SmartWord(args[0]);
+    // Constructor to initialize the Trie and models from the word file
+    public SmartWord(String wordFile) throws IOException {
+        this.trie = new Trie();
+        this.bigramModel = new HashMap<>();
+        this.trigramModel = new HashMap<>();
+        this.currentWord = "";
+        loadWordsIntoTrie(wordFile);
+    }
 
-      smartWord.guess('a', 0, 0);
-      smartWord.guess('b', 1, 0);
-      smartWord.guess('o', 2, 0);
-      smartWord.guess('u', 3, 0);
-      smartWord.guess('t', 3, 0);
-   }
-
-   String[] guesses = new String[3];  // 3 guesses from SmartWord
-   FileReader dictionaryPath;
-
-   Trie trie;
-   OldWords oldWords;
-   String currentWord;
-
-   // initialize SmartWord with a file of English words
-   public SmartWord(String wordFile) throws IOException {
-      this.dictionaryPath = new FileReader(wordFile);
-      this.trie = new Trie();
-      this.currentWord = "";
-      loadWordsIntoTrie(wordFile); 
-   }
-
-   private void loadWordsIntoTrie(String wordFile) {
-      try (BufferedReader br = new BufferedReader(dictionaryPath)) {
+    // Loads words from the word file into the Trie
+    private void loadWordsIntoTrie(String wordFile) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(wordFile))) {
             String line;
             while ((line = br.readLine()) != null) {
-                // Remove any surrounding whitespace and convert to lowercase
-                String word = line.trim().toLowerCase();
+                String word = line.trim().toLowerCase(); // Normalize to lowercase
                 if (!word.isEmpty()) {
-                    trie.insert(word);  // Insert each word into the Trie
+                    trie.insert(word); // Inserts words into Trie
                 }
             }
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-   }
+    }
 
+    // Processes old messages to populate the Trie and n-gram models
+    public void processOldMessages(String oldMessageFile) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(oldMessageFile))) {
+            String line;
+            String prevWord = null; // Tracks the previous word for bigram updates
+            String prevPrevWord = null; // Tracks the word before the previous word for trigram updates
 
-   // process old messages from oldMessageFile
-   public void processOldMessages(String oldMessageFile) throws IOException {
-      BufferedReader br = new BufferedReader(new FileReader(oldMessageFile));
-      String line;
-      while ((line = br.readLine()) != null) {
-         // Removes everything that is not a letter
-         line = line.replaceAll("[^a-zA-Z]", "");
-      }
-      br.close();
-   }
+            while ((line = br.readLine()) != null) {
+                line = line.replaceAll("[^a-zA-Z']", " ").toLowerCase(); // Normalizes and removes non-alphabetic characters
+                String[] words = line.split("\\s+");
 
-   // based on a letter typed in by the user, return 3 word guesses in an array
-   // letter: letter typed in by the user
-   // letterPosition:  position of the letter in the word, starts from 0
-   // wordPosition: position of the word in a message, starts from 0
-   public String[] guess(char letter,  int letterPosition, int wordPosition) {
-      currentWord = currentWord + letter;
-      System.out.println(currentWord);
+                for (String word : words) {
+                    if (!word.isEmpty()) {
+                        trie.insert(word); // Inserts word into Trie
 
-      // TODO
-      String[] suggestions = trie.traverse(currentWord);
-      for (int i = 0; i < guesses.length; i++) {
-         guesses[i] = i < suggestions.length ? suggestions[i] : null;
-      }
-      System.out.println("guesses: " + Arrays.toString(guesses));
-      return guesses;
-   }
+                        // Updates bigram model
+                        if (prevWord != null) {
+                            bigramModel.computeIfAbsent(prevWord, k -> new HashMap<>())
+                                       .merge(word, 1, Integer::sum);
+                        }
 
-   // feedback on the 3 guesses from the user
-   // isCorrectGuess: true if one of the guesses is correct
-   // correctWord: 3 cases:
-   // a.  correct word if one of the guesses is correct
-   // b.  null if none of the guesses is correct, before the user has typed in 
-   //            the last letter
-   // c.  correct word if none of the guesses is correct, and the user has 
-   //            typed in the last letter
-   // That is:
-   // Case       isCorrectGuess      correctWord   
-   // a.         true                correct word
-   // b.         false               null
-   // c.         false               correct word
-   public void feedback(boolean isCorrectGuess, String correctWord) {
-      if (isCorrectGuess) {
-         currentWord = "";
-      } else if (correctWord != null) {
-         //Add correct word to the trie to improve
-         trie.insert(correctWord);
-         //Reset current word to blank
-         currentWord = ""; 
-      }
-   }
+                        // Updates trigram model
+                        if (prevPrevWord != null && prevWord != null) {
+                            String bigram = prevPrevWord + " " + prevWord;
+                            trigramModel.computeIfAbsent(bigram, k -> new HashMap<>())
+                                        .merge(word, 1, Integer::sum);
+                        }
+
+                        // Updates word trackers
+                        prevPrevWord = prevWord;
+                        prevWord = word;
+                    }
+                }
+            }
+        }
+    }
+
+    // Prunes unused words and compresses the Trie for efficiency
+    public void pruneUnusedWords() {
+        trie.pruneUnused(); // Removes low-frequency or unconfirmed words
+        trie.compressTrie(); // Optimizes Trie structure
+    }
+
+    // Generates suggestions for the current word based on the letter typed
+    public String[] guess(char letter, int letterPosition, int wordPosition) {
+        currentWord += letter; // Update the current word with the new letter
+
+        // Gets suggestions from the Trie using weighted scores
+        List<String> suggestions = trie.getWeightedSuggestions(
+            currentWord, MAX_GUESSES, currentWord, bigramModel, trigramModel);
+
+        // Prepares the output array of guesses
+        String[] guesses = new String[MAX_GUESSES];
+        for (int i = 0; i < MAX_GUESSES; i++) {
+            guesses[i] = i < suggestions.size() ? suggestions.get(i) : null;
+        }
+
+        // Prints debug information
+        System.out.println("Current word: " + currentWord);
+        System.out.println("Suggestions: " + Arrays.toString(guesses));
+        return guesses;
+    }
+
+    // Provides feedback on the guesses and updates the Trie if necessary
+    public void feedback(boolean isCorrectGuess, String correctWord) {
+        if (isCorrectGuess) {
+            currentWord = ""; // Reset current word if the guess was correct
+        } else if (correctWord != null) {
+            trie.insert(correctWord.toLowerCase()); // Insert the correct word into Trie
+            trie.confirmWord(correctWord.toLowerCase()); // Mark the word as confirmed
+            currentWord = ""; // Reset current word
+        }
+    }
 }
